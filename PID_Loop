@@ -1,0 +1,50 @@
+float t = 0;
+float oldt = 0;
+float x
+float y
+float xt = 0;//target x 
+float yt = 0;//target y
+float kp;
+float ki;
+float kd;
+float xp;
+float xi;
+float xd;
+float yp;
+float yi;
+float yd;
+float xp_old;
+float xi_old;
+float xd_old;
+float yp_old;
+float yi_old;
+float yd_old;
+float new_output_x;
+float new_output_y;
+float old_output_x;
+float old_output_y;
+while true{
+	t = time(); // get current time
+	dt = t - oldt;
+	xp = xt - x;
+	xd = (xp - xp_old)/dt;
+	xi = xp_old + xi * dt;
+	yp = yt - y;
+	yd = (yp - yp_old)/dt;
+	yi = yp_old + yi * dt;
+	new_output_x = kp * xp + ki * xi + kd * xd;
+	new_output_y = kp * yp + ki * yi + kd * yd;
+	
+	motorx(new_output_x);
+	motory(old_output_y);
+
+	oldt = t;	
+	xp_old = xp;
+	yp_old = yp
+	xi_old = xi;
+	yi_old = yi;
+	xd_old = xd;
+	yd_old = yd;
+	old_output_x = new_output_x;
+	old_output_y = new_output_y;
+}
