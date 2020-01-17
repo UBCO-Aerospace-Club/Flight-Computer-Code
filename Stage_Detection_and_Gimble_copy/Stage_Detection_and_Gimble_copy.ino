@@ -43,6 +43,8 @@ float old_output_y = 40;
 
 int hallSensorPin = 2;     
 int magnetState = 0; 
+int Relay = 7;
+boolean legState = false;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //SD Card
@@ -140,6 +142,7 @@ void setup() {
   gimbleY.attach(9);
   
   pinMode(hallSensorPin, INPUT);
+  pinMode(Relay, OUTPUT);
   
   Wire.begin();                           //begin the wire comunication
   Wire.beginTransmission(0x68);           //begin, Send the slave adress (in this case 68)              
@@ -364,7 +367,13 @@ if(millis()-last_time >= update_delay){
     } 
     if (dropMagnet && dropAccel){
         drop = true;
+        drop_time = millis();
         Serial.print("DROP!!");
+    }
+    if (millis() > (drop_time + 10000)){
+       digitalWrite(Relay, HIGH); //Cut legs
+       delay(10000);
+       digitalWrite(Relay, LOW);
     }
     
   }
