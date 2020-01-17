@@ -40,6 +40,9 @@ float new_output_x = 40;
 float new_output_y = 40;
 float old_output_x = 40;
 float old_output_y = 40;
+
+int hallSensorPin = 2;     
+int magnetState = 0; 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //SD Card
@@ -65,6 +68,8 @@ float prev_acc_x = 1000;
 //state tracking booleans
 bool liftoff = false;
 bool drop = false;
+bool dropAccel = false; //Accelerometer detects drop
+bool dropMagnet = false; // Hall sensor detects drop
 bool ignition = false;
 //Variables relating to previous actions
 float history[5]= {0.000,0.00,0.00,0.00,0.00};
@@ -133,6 +138,8 @@ void log_data(){
 void setup() {
   gimbleX.attach(10);//Limit 0 to 80
   gimbleY.attach(9);
+  
+  pinMode(hallSensorPin, INPUT);
   
   Wire.begin();                           //begin the wire comunication
   Wire.beginTransmission(0x68);           //begin, Send the slave adress (in this case 68)              
@@ -230,6 +237,9 @@ void setup() {
 
 
 void loop(){
+  
+   magnetState = digitalRead(hallSensorPin); // State of Hall Magnet Sensor
+  
   timePrev = tme;                        // the previous time is stored before the actual time read
   tme = millis();                        // actual time read
   elapsedTime = (tme - timePrev) / 1000; //divide by 1000 in order to obtain seconds
@@ -347,9 +357,16 @@ if(millis()-last_time >= update_delay){
       
       //Serial.println("Drop Detection State");
       if(avg <= drop_threshold){
-        drop=true;
-        Serial.println("DROP!");
-      }
+        dropAccel=true;
+      } 
+    if (magnetState == LOW) {        
+        dropMagnet = true;
+    } 
+    if (dropMagnet && dropAccel){
+        drop = true;
+        Serial.print("DROP!!");
+    }
+    
   }
  }
 if(/*liftoff==true&&drop==true*/true){//Dropping state
