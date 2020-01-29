@@ -11,6 +11,7 @@
 #include <Servo.h>
 #include <SD.h>
 #include <SPI.h>
+#include <Seeed_BME280.h>
 
 Servo gimbleX;
 Servo gimbleY;
@@ -61,24 +62,40 @@ float prev_acc_x = 1000;
 bool drop = false;
 bool ignition = false;
 //Variables relating to previous actions
-float history[5]= {0.000,0.00,0.00,0.00,0.00};
+float history_alt[5]= {0.000,0.00,0.00,0.00,0.00};
+float history_acc[5]= {0.000,0.00,0.00,0.00,0.00};
 int update_delay = 10;
 //Time thing
 int last_time;
 
+BME280 bme280; //Altitude Sensor
 
 //Record a history of 5 instances of past acceleration to the history
-void set_history(float acc){//replace first entry with current data after shifting all entries left
-  float new_history[5];
+void set_history_acc(float acc){//replace first entry with current data after shifting all entries left
+  float new_history_acc[5];
   //The first entry of the history is set to the current acceleration value
-  new_history[0] = acc;
+  new_history_acc[0] = acc;
   //Set the last 4 entries of the new history to the first 4 of the old history
   for(int i=0; i<4;i++){
-    new_history[i+1] = history[i];
+    new_history_acc[i+1] = history_acc[i];
   }
   //Set the history to the new history
   for(int i=0; i<5;i++){
-    history[i] = new_history[i];
+    history_acc[i] = new_history_acc[i];
+  }
+}
+
+void set_history_alt(float acc){//replace first entry with current data after shifting all entries left
+  float new_history_alt[5];
+  //The first entry of the history is set to the current acceleration value
+  new_history_alt[0] = acc;
+  //Set the last 4 entries of the new history to the first 4 of the old history
+  for(int i=0; i<4;i++){
+    new_history_alt[i+1] = history_alt[i];
+  }
+  //Set the history to the new history
+  for(int i=0; i<5;i++){
+    history_alt[i] = new_history_alt[i];
   }
 }
 
@@ -123,6 +140,10 @@ void log_data(){
 void setup() {
   gimbleX.attach(10);//Limit 0 to 80
   gimbleY.attach(9);
+  
+    if(!bme280.init()){
+    Serial.println("BME280 Device error!");
+  }
   
   Wire.begin();                           //begin the wire comunication
   Wire.beginTransmission(0x68);           //begin, Send the slave adress (in this case 68)              
@@ -298,8 +319,36 @@ void loop(){
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 if(millis()-last_time >= update_delay){
     last_time = millis();
+  
+  ///////////Acceleration
     float magAcc = sqrt(pow(Acc_rawX,2)+pow(Acc_rawY,2)+pow(Acc_rawZ,2));
-    set_history(magAcc);
+    set_history_acc(magAcc);
+    float sumAcc = 0;
+    for(int i=0; i<5;i++){
+      sumAcc += history_acc[i];
+    }
+    float avgAcc = sumAcc / 5.0;
+    
+    Serial.print("Acceleration: ");
+    Serial.print(avgAcc);
+    Serial.println("m/s^2");
+    
+    
+  
+  ////////////Altitude
+    float magAltitude = bme280.calcAltitude(pressure);
+    set_history_alt(magAltitude);
+    float sumAltitude = 0;
+    for(int i=0; i<5;i++){
+      sumAltitude += history_alt[i];
+    }
+    float avgAltitude = sumAltitude / 5.0;
+    
+    Serial.print("Altitude: ");
+    Serial.print(avgAltitude);
+    Serial.println("m");
+  
+  
 }
    
  if(drop==false){//Drop detection state
