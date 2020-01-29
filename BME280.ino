@@ -1,5 +1,5 @@
 #include <Seeed_BME280.h>
-#Link to Library: https://github.com/Seeed-Studio/Grove_BME280
+//Link to Library: https://github.com/Seeed-Studio/Grove_BME280
 #include "Seeed_BME280.h"
 #include <Wire.h>
 
